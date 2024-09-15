@@ -269,9 +269,7 @@ Here’s a day-wise training plan for learning HTML, from basic concepts to more
   <body>
       <p>Use &amp; to represent an ampersand (&).</p>
       <p>Use &lt; and &gt; to represent less than (&lt;) and greater than (&gt;).</p>
-      <p>Use &copy; to represent the copyright symbol (&copy; 2024).</
-
-p>
+      <p>Use &copy; to represent the copyright symbol (&copy; 2024).</p>
   </body>
   </html>
   ```
