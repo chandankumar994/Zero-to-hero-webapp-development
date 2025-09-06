@@ -163,5 +163,3 @@ exit;
 4. Limit login attempts (after 3 wrong tries, block for a while).
 
 ---
-
-Would you like me to **bundle these 3 projects into a single "mini portal"** (like a website with navigation links)? That way, all features are together in one project.
