@@ -1,54 +1,38 @@
-# Employee Management system.
-It will include:
+## employee management system.
 
-✅ Database connection
-✅ Login page (with error messages, session start)
-✅ Register page (with password hashing)
-✅ Dashboard page (with sidebar + top navbar + “Hi Username”)
-✅ Logout
+This will be a **complete mini Employee Management System** with:
+✅ User authentication (Register, Login, Logout, Session)
+✅ Dashboard with sidebar + topbar
+✅ CRUD for employees (Add, View, Update, Delete)
+✅ Bootstrap responsive design
 
 ---
 
 # 📂 Project Structure
 
 ```
-employee_app/
+user_system/
 │── db.php
 │── login.php
 │── register.php
 │── dashboard.php
+│── employees.php
+│── add_employee.php
+│── edit_employee.php
+│── delete_employee.php
 │── logout.php
 ```
 
 ---
 
-# 🗄 1. Database Setup
-
-Run this SQL in **phpMyAdmin / MySQL**:
-
-```sql
-CREATE DATABASE employee_app;
-
-USE employee_app;
-
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-```
-
----
-
-# ⚙️ 2. `db.php`
+# ⚙️ `db.php`
 
 ```php
 <?php
 $servername = "localhost";
 $username = "root";   // change if needed
 $password = "";       // change if needed
-$dbname = "employee_app";
+$dbname = "user_system";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 
@@ -60,7 +44,7 @@ if ($conn->connect_error) {
 
 ---
 
-# 🔐 3. `login.php`
+# 🔐 `login.php`
 
 ```php
 <?php
@@ -92,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Login - Employee App</title>
+  <title>Login - User System</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {background: #343a40; display: flex; align-items: center; justify-content: center; height: 100vh;}
@@ -122,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 ---
 
-# 📝 4. `register.php`
+# 📝 `register.php`
 
 ```php
 <?php
@@ -130,6 +114,7 @@ include 'db.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST['username']);
+    $email = trim($_POST['email']);
     $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
 
     $check = "SELECT * FROM users WHERE username='$username'";
@@ -138,7 +123,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($result->num_rows > 0) {
         $error = "⚠ Username already exists!";
     } else {
-        $sql = "INSERT INTO users (username, password) VALUES ('$username', '$password')";
+        $sql = "INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$password')";
         if ($conn->query($sql) === TRUE) {
             header("Location: login.php?registered=1");
             exit;
@@ -152,7 +137,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Register - Employee App</title>
+  <title>Register - User System</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {background: #495057; display: flex; align-items: center; justify-content: center; height: 100vh;}
@@ -169,6 +154,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       <input type="text" name="username" class="form-control" required>
     </div>
     <div class="mb-3">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" required>
+    </div>
+    <div class="mb-3">
       <label class="form-label">Password</label>
       <input type="password" name="password" class="form-control" required>
     </div>
@@ -182,7 +171,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 ---
 
-# 📊 5. `dashboard.php`
+# 📊 `dashboard.php`
 
 ```php
 <?php
@@ -197,7 +186,7 @@ $username = $_SESSION['username'];
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard - Employee App</title>
+  <title>Dashboard - User System</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {display: flex; min-height: 100vh;}
@@ -211,10 +200,9 @@ $username = $_SESSION['username'];
 <body>
 
 <div class="sidebar">
-  <h4>Employee App</h4>
+  <h4>User System</h4>
   <a href="dashboard.php">🏠 Dashboard</a>
-  <a href="#">👤 Profile</a>
-  <a href="#">⚙ Settings</a>
+  <a href="employees.php">👥 Employees</a>
   <a href="logout.php">🚪 Logout</a>
 </div>
 
@@ -225,7 +213,7 @@ $username = $_SESSION['username'];
   </div>
   <div class="p-4">
     <h3>Welcome <?= $username ?> 🎉</h3>
-    <p>This is your dashboard. You can add features like employee management here.</p>
+    <p>This is your dashboard. Manage employees using the sidebar.</p>
   </div>
 </div>
 
@@ -235,7 +223,160 @@ $username = $_SESSION['username'];
 
 ---
 
-# 🚪 6. `logout.php`
+# 👥 `employees.php`
+
+```php
+<?php
+session_start();
+if (!isset($_SESSION['username'])) {
+    header("Location: login.php");
+    exit;
+}
+include 'db.php';
+$result = $conn->query("SELECT * FROM employees");
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Employees - User System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <h2>Employees</h2>
+  <a href="add_employee.php" class="btn btn-success mb-3">+ Add Employee</a>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>ID</th><th>First Name</th><th>Last Name</th><th>Department</th><th>Email</th><th>Country</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php while($row = $result->fetch_assoc()): ?>
+      <tr>
+        <td><?= $row['id'] ?></td>
+        <td><?= $row['firstname'] ?></td>
+        <td><?= $row['lastname'] ?></td>
+        <td><?= $row['department'] ?></td>
+        <td><?= $row['email'] ?></td>
+        <td><?= $row['country'] ?></td>
+        <td>
+          <a href="edit_employee.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
+          <a href="delete_employee.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm">Delete</a>
+        </td>
+      </tr>
+      <?php endwhile; ?>
+    </tbody>
+  </table>
+</body>
+</html>
+```
+
+---
+
+# ➕ `add_employee.php`
+
+```php
+<?php
+include 'db.php';
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $firstname = $_POST['firstname'];
+    $lastname = $_POST['lastname'];
+    $department = $_POST['department'];
+    $email = $_POST['email'];
+    $country = $_POST['country'];
+
+    $sql = "INSERT INTO employees (firstname, lastname, department, email, country) 
+            VALUES ('$firstname', '$lastname', '$department', '$email', '$country')";
+    $conn->query($sql);
+    header("Location: employees.php");
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Employee</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <h2>Add Employee</h2>
+  <form method="POST">
+    <div class="mb-3"><label>First Name</label><input type="text" name="firstname" class="form-control" required></div>
+    <div class="mb-3"><label>Last Name</label><input type="text" name="lastname" class="form-control" required></div>
+    <div class="mb-3"><label>Department</label><input type="text" name="department" class="form-control" required></div>
+    <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" required></div>
+    <div class="mb-3"><label>Country</label><input type="text" name="country" class="form-control" required></div>
+    <button type="submit" class="btn btn-success">Save</button>
+    <a href="employees.php" class="btn btn-secondary">Back</a>
+  </form>
+</body>
+</html>
+```
+
+---
+
+# ✏️ `edit_employee.php`
+
+```php
+<?php
+include 'db.php';
+$id = $_GET['id'];
+$result = $conn->query("SELECT * FROM employees WHERE id=$id");
+$employee = $result->fetch_assoc();
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $firstname = $_POST['firstname'];
+    $lastname = $_POST['lastname'];
+    $department = $_POST['department'];
+    $email = $_POST['email'];
+    $country = $_POST['country'];
+
+    $sql = "UPDATE employees SET firstname='$firstname', lastname='$lastname', department='$department',
+            email='$email', country='$country' WHERE id=$id";
+    $conn->query($sql);
+    header("Location: employees.php");
+    exit;
+}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Employee</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+  <h2>Edit Employee</h2>
+  <form method="POST">
+    <div class="mb-3"><label>First Name</label><input type="text" name="firstname" class="form-control" value="<?= $employee['firstname'] ?>" required></div>
+    <div class="mb-3"><label>Last Name</label><input type="text" name="lastname" class="form-control" value="<?= $employee['lastname'] ?>" required></div>
+    <div class="mb-3"><label>Department</label><input type="text" name="department" class="form-control" value="<?= $employee['department'] ?>" required></div>
+    <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" value="<?= $employee['email'] ?>" required></div>
+    <div class="mb-3"><label>Country</label><input type="text" name="country" class="form-control" value="<?= $employee['country'] ?>" required></div>
+    <button type="submit" class="btn btn-primary">Update</button>
+    <a href="employees.php" class="btn btn-secondary">Back</a>
+  </form>
+</body>
+</html>
+```
+
+---
+
+# ❌ `delete_employee.php`
+
+```php
+<?php
+include 'db.php';
+$id = $_GET['id'];
+$conn->query("DELETE FROM employees WHERE id=$id");
+header("Location: employees.php");
+exit;
+?>
+```
+
+---
+
+# 🚪 `logout.php`
 
 ```php
 <?php
@@ -247,11 +388,3 @@ exit;
 ```
 
 ---
-
-# ✅ Features in This Version
-
-* Bootstrap-based, **modern responsive design**
-* **Login/Register** with password hashing
-* **Session management**
-* **Dashboard with sidebar + topbar**
-* **Logout functionality**
