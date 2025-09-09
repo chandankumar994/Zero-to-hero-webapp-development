@@ -254,49 +254,38 @@ $username = $_SESSION['username'];
 
 ```php
 <?php
-session_start();
-if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
-    exit;
-}
-include 'db.php';
-$result = $conn->query("SELECT * FROM employees");
+include("db.php");
+$result = mysqli_query($conn, "SELECT * FROM employees");
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Employees - User System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4">
-  <h2>Employees</h2>
-  <a href="add_employee.php" class="btn btn-success mb-3">+ Add Employee</a>
-  <table class="table table-bordered">
-    <thead>
-      <tr>
-        <th>ID</th><th>First Name</th><th>Last Name</th><th>Department</th><th>Email</th><th>Country</th><th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php while($row = $result->fetch_assoc()): ?>
-      <tr>
-        <td><?= $row['id'] ?></td>
-        <td><?= $row['firstname'] ?></td>
-        <td><?= $row['lastname'] ?></td>
-        <td><?= $row['department'] ?></td>
-        <td><?= $row['email'] ?></td>
-        <td><?= $row['country'] ?></td>
+
+<h3>Employees List</h3>
+<a href="dashboard.php?page=add_employee" class="btn btn-primary mb-2">Add Employee</a>
+<table class="table table-bordered">
+    <tr>
+        <th>ID</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Department</th>
+        <th>Email</th>
+        <th>Country</th>
+        <th>Actions</th>
+    </tr>
+    <?php while ($row = mysqli_fetch_assoc($result)) { ?>
+    <tr>
+        <td><?php echo $row['id']; ?></td>
+        <td><?php echo $row['firstname']; ?></td>
+        <td><?php echo $row['lastname']; ?></td>
+        <td><?php echo $row['department']; ?></td>
+        <td><?php echo $row['email']; ?></td>
+        <td><?php echo $row['country']; ?></td>
         <td>
-          <a href="edit_employee.php?id=<?= $row['id'] ?>" class="btn btn-warning btn-sm">Edit</a>
-          <a href="delete_employee.php?id=<?= $row['id'] ?>" class="btn btn-danger btn-sm">Delete</a>
+            <a href="dashboard.php?page=edit_employee&id=<?php echo $row['id']; ?>" class="btn btn-warning btn-sm">Edit</a>
+            <a href="delete_employee.php?id=<?php echo $row['id']; ?>" class="btn btn-danger btn-sm"
+               onclick="return confirm('Are you sure you want to delete this employee?');">Delete</a>
         </td>
-      </tr>
-      <?php endwhile; ?>
-    </tbody>
-  </table>
-</body>
-</html>
+    </tr>
+    <?php } ?>
+</table>
 ```
 
 ---
@@ -305,40 +294,52 @@ $result = $conn->query("SELECT * FROM employees");
 
 ```php
 <?php
-include 'db.php';
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+include("db.php");
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $firstname = $_POST['firstname'];
     $lastname = $_POST['lastname'];
     $department = $_POST['department'];
     $email = $_POST['email'];
     $country = $_POST['country'];
 
-    $sql = "INSERT INTO employees (firstname, lastname, department, email, country) 
-            VALUES ('$firstname', '$lastname', '$department', '$email', '$country')";
-    $conn->query($sql);
-    header("Location: employees.php");
-    exit;
+    $query = "INSERT INTO employees (firstname, lastname, department, email, country) 
+              VALUES ('$firstname', '$lastname', '$department', '$email', '$country')";
+    if (mysqli_query($conn, $query)) {
+        header("Location: dashboard.php?page=employees");
+        exit();
+    } else {
+        echo "<div class='alert alert-danger'>Error: " . mysqli_error($conn) . "</div>";
+    }
 }
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Add Employee</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4">
-  <h2>Add Employee</h2>
-  <form method="POST">
-    <div class="mb-3"><label>First Name</label><input type="text" name="firstname" class="form-control" required></div>
-    <div class="mb-3"><label>Last Name</label><input type="text" name="lastname" class="form-control" required></div>
-    <div class="mb-3"><label>Department</label><input type="text" name="department" class="form-control" required></div>
-    <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" required></div>
-    <div class="mb-3"><label>Country</label><input type="text" name="country" class="form-control" required></div>
-    <button type="submit" class="btn btn-success">Save</button>
-    <a href="employees.php" class="btn btn-secondary">Back</a>
-  </form>
-</body>
-</html>
+
+<h3>Add Employee</h3>
+<form method="POST">
+    <div class="mb-3">
+        <label>First Name</label>
+        <input type="text" name="firstname" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Last Name</label>
+        <input type="text" name="lastname" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Department</label>
+        <input type="text" name="department" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Email</label>
+        <input type="email" name="email" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label>Country</label>
+        <input type="text" name="country" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-success">Add</button>
+    <a href="dashboard.php?page=employees" class="btn btn-secondary">Cancel</a>
+</form>
+
 ```
 
 ---
@@ -347,44 +348,57 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 ```php
 <?php
-include 'db.php';
-$id = $_GET['id'];
-$result = $conn->query("SELECT * FROM employees WHERE id=$id");
-$employee = $result->fetch_assoc();
+include("db.php");
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+$id = $_GET['id'];
+$result = mysqli_query($conn, "SELECT * FROM employees WHERE id=$id");
+$employee = mysqli_fetch_assoc($result);
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $firstname = $_POST['firstname'];
     $lastname = $_POST['lastname'];
     $department = $_POST['department'];
     $email = $_POST['email'];
     $country = $_POST['country'];
 
-    $sql = "UPDATE employees SET firstname='$firstname', lastname='$lastname', department='$department',
-            email='$email', country='$country' WHERE id=$id";
-    $conn->query($sql);
-    header("Location: employees.php");
-    exit;
+    $query = "UPDATE employees SET 
+              firstname='$firstname', lastname='$lastname', department='$department', 
+              email='$email', country='$country' WHERE id=$id";
+    if (mysqli_query($conn, $query)) {
+        header("Location: dashboard.php?page=employees");
+        exit();
+    } else {
+        echo "<div class='alert alert-danger'>Error: " . mysqli_error($conn) . "</div>";
+    }
 }
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Edit Employee</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4">
-  <h2>Edit Employee</h2>
-  <form method="POST">
-    <div class="mb-3"><label>First Name</label><input type="text" name="firstname" class="form-control" value="<?= $employee['firstname'] ?>" required></div>
-    <div class="mb-3"><label>Last Name</label><input type="text" name="lastname" class="form-control" value="<?= $employee['lastname'] ?>" required></div>
-    <div class="mb-3"><label>Department</label><input type="text" name="department" class="form-control" value="<?= $employee['department'] ?>" required></div>
-    <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" value="<?= $employee['email'] ?>" required></div>
-    <div class="mb-3"><label>Country</label><input type="text" name="country" class="form-control" value="<?= $employee['country'] ?>" required></div>
+
+<h3>Edit Employee</h3>
+<form method="POST">
+    <div class="mb-3">
+        <label>First Name</label>
+        <input type="text" name="firstname" class="form-control" value="<?php echo $employee['firstname']; ?>" required>
+    </div>
+    <div class="mb-3">
+        <label>Last Name</label>
+        <input type="text" name="lastname" class="form-control" value="<?php echo $employee['lastname']; ?>" required>
+    </div>
+    <div class="mb-3">
+        <label>Department</label>
+        <input type="text" name="department" class="form-control" value="<?php echo $employee['department']; ?>" required>
+    </div>
+    <div class="mb-3">
+        <label>Email</label>
+        <input type="email" name="email" class="form-control" value="<?php echo $employee['email']; ?>" required>
+    </div>
+    <div class="mb-3">
+        <label>Country</label>
+        <input type="text" name="country" class="form-control" value="<?php echo $employee['country']; ?>" required>
+    </div>
     <button type="submit" class="btn btn-primary">Update</button>
-    <a href="employees.php" class="btn btn-secondary">Back</a>
-  </form>
-</body>
-</html>
+    <a href="dashboard.php?page=employees" class="btn btn-secondary">Cancel</a>
+</form>
+
 ```
 
 ---
